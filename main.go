@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./src/effio"
+	"github.com/tobert/effio/src/effio"
 	"os"
 )
 
