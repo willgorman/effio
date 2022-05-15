@@ -46,9 +46,9 @@ func LoadFioLog(filename string) LogRecs {
 		}
 
 		// fio always uses ", " instead of "," as far as I can tell
-		r := strings.SplitN(string(line), ", ", 4)
+		r := strings.SplitN(string(line), ", ", 5) // could be 6 if log_offset is used
 		// probably an impartial record at the end of the file
-		if len(r) < 4 || r[0] == "" || r[1] == "" {
+		if len(r) < 5 || r[0] == "" || r[1] == "" {
 			continue
 		}
 
@@ -72,8 +72,13 @@ func LoadFioLog(filename string) LogRecs {
 			log.Printf("\nParsing field 3 failed in file '%s' at line %d: %s", filename, lno, err)
 			continue
 		}
+		prio, err := strconv.Atoi(r[4])
+		if err != nil {
+			log.Printf("\nParsing field 4 failed in file '%s' at line %d: %s", filename, lno, err)
+			continue
+		}
 
-		lr := LogRec{uint32(tm), uint32(perf), uint8(ddir), uint16(bsz), uint32(lno)}
+		lr := LogRec{uint32(tm), uint32(perf), uint8(ddir), uint16(bsz), uint32(lno), uint8(prio)}
 		records = append(records, &lr)
 	}
 
@@ -84,7 +89,7 @@ func LoadFioLog(filename string) LogRecs {
 }
 
 func (lrs LogRecs) DumpCSV(fpath string) {
-	fd, err := os.OpenFile(fpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(fpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Fatalf("Could not open '%s' for write: %s\n", fpath, err)
 	}

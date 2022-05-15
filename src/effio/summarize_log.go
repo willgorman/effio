@@ -14,9 +14,12 @@ type LogRec struct {
 	Ddir uint8  `json:"ddir"`  // 0 = read, 1 = write, 2 = trim
 	Bsz  uint16 `json:"bsz"`   // block size
 	Idx  uint32 `json:"idx"`   // save the original index in LogRecs
+	Prio uint8  `json:"prio"`  // command priority
 }
-type LogPcntl map[float64]*LogRec // .MarshalJSON() at EOF
-type LogRecs []*LogRec
+type (
+	LogPcntl map[float64]*LogRec // .MarshalJSON() at EOF
+	LogRecs  []*LogRec
+)
 
 // default to sorting by time order
 func (p LogRecs) Len() int           { return len(p) }
@@ -49,7 +52,7 @@ type LogBin []*LogSmry
 
 func NewLogBin(size int) LogBin {
 	lhg := make(LogBin, size)
-	for i, _ := range lhg {
+	for i := range lhg {
 		lhg[i] = &LogSmry{}
 	}
 	return lhg
@@ -348,7 +351,7 @@ func (lp LogPcntl) MarshalJSON() ([]byte, error) {
 	// copy the keys to a list for sorting so they're in order in the output
 	count := 0
 	keys := make([]float64, len(lp))
-	for key, _ := range lp {
+	for key := range lp {
 		keys[count] = key
 		count++
 	}
