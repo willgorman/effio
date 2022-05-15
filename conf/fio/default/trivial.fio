@@ -1,6 +1,7 @@
 [global]
 ioengine=posixaio
 rw=readwrite
+rwmixread=95
 blocksize={{ .Device.Blocksize }}
 size=1g
 directory={{ .Device.Mountpoint }}

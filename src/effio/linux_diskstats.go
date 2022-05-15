@@ -49,7 +49,7 @@ func CollectDiskstats(fname string, d Device) chan struct{} {
 	major, minor := d.devNums()
 
 	go func() {
-		fd, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		fd, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			log.Fatalf("Could not open file '%s' for writing diskstats: %s", fname, err)
 		}
@@ -90,7 +90,7 @@ func ReadDiskstats() (out Diskstats) {
 	rows := bytes.Split(data[0:len(data)-1], []byte{byte('\n')})
 
 	// bytes.Split doesn't handle variable whitespace between fields
-	fields := make([]string, 14)
+	fields := make([]string, 15)
 	field := make([]byte, 32)
 	var f, i int
 	for _, row := range rows {

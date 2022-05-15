@@ -1,0 +1,21 @@
+[
+  {
+    "name": "qemu_harddisk",
+    "notes": "",
+    "ignore": false,
+    "device": "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-part1",
+    "mountpoint": "/home/will",
+    "filesystem": "ext4",
+    "brand": "Generic",
+    "series": "QEMU HARDDISK",
+    "datasheet": "",
+    "capacity": 322122547200,
+    "rotational": false,
+    "transport": "",
+    "hba": "",
+    "media": "",
+    "blocksize": 512,
+    "rpm": 0,
+    "mount": false
+  }
+]

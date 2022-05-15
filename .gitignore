@@ -2,6 +2,6 @@
 *.test
 *.swp
 
-effio
-suites
-public/data
+/effio
+/suites
+/public/data
