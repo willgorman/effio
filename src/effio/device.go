@@ -30,6 +30,9 @@ type Device struct {
 	Blocksize  int    `json:"blocksize"`
 	RPM        int    `json:"rpm"`
 	DoMount    bool   `json:"mount"`
+	// Run fio as a client connected to this server
+	// for this device.  Does not support DoMount
+	Server string `json:"server"`
 }
 
 type Devices []Device
@@ -73,7 +76,7 @@ func (d *Device) Mount() error {
 		return errors.New("'filesystem' must be defined in device json for mounting support")
 	}
 
-	if err := os.MkdirAll(d.Mountpoint, 0755); err != nil {
+	if err := os.MkdirAll(d.Mountpoint, 0o755); err != nil {
 		return err
 	}
 

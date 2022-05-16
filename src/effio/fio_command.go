@@ -58,7 +58,7 @@ func (fcmd *FioCommand) Run() {
 	if fcmd.Device.Device != "" && fcmd.Device.Mountpoint != "" {
 		err := fcmd.Device.Mount()
 		if err != nil {
-			log.Printf(fcmd.Device.ToJson())
+			log.Println(fcmd.Device.ToJson())
 			log.Fatalf("Could not mount device '%s': %s\n", fcmd.Device.Name, err)
 		}
 		unmount = true
@@ -76,7 +76,7 @@ func (fcmd *FioCommand) Run() {
 
 	// start running the process
 	if err := cmd.Start(); err != nil {
-		log.Fatalf("Could not run '%s %s': %s\n", fioPath, strings.Join(fcmd.FioArgs, " "))
+		log.Fatalf("Could not run '%s %s': %s\n", fioPath, strings.Join(fcmd.FioArgs, " "), err)
 	}
 
 	// grab stderr in case something goes wrong
@@ -94,14 +94,14 @@ func (fcmd *FioCommand) Run() {
 	if unmount {
 		err = fcmd.Device.Umount()
 		if err != nil {
-			log.Printf(fcmd.Device.ToJson())
-			log.Fatalf("Could not unmount device '%s': %s\n", fcmd.Device.Name)
+			log.Println(fcmd.Device.ToJson())
+			log.Fatalf("Could not unmount device '%s': %s\n", fcmd.Device.Name, err)
 		}
 	}
 
 	// it might be OK to let 1 fio command out of a suite fail?
 	if err != nil {
-		log.Printf(string(errors))
+		log.Println(string(errors))
 		log.Fatalf("Command '%s %s' failed: %s\n", fioPath, strings.Join(fcmd.FioArgs, " "), err)
 	}
 }
@@ -111,7 +111,7 @@ func (fcmd *FioCommand) Run() {
 func (fcmd *FioCommand) WriteFioConf() {
 	outfile := path.Join(fcmd.Path, fcmd.FioFile)
 
-	fd, err := os.OpenFile(outfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(outfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Fatalf("Failed to create fio config file '%s': %s\n", outfile, err)
 	}
@@ -136,7 +136,7 @@ func (fcmd *FioCommand) WriteFcmdJson() {
 	// MarshalIndent does not follow the final brace with a newline
 	js = append(js, byte('\n'))
 
-	err = ioutil.WriteFile(outfile, js, 0644)
+	err = ioutil.WriteFile(outfile, js, 0o644)
 	if err != nil {
 		log.Fatalf("Failed to write command JSON data file '%s': %s\n", outfile, err)
 	}
@@ -161,7 +161,7 @@ func LoadFioCommandJson(filename string) (out FioCommand) {
 func (fcmd *FioCommand) WriteCmdScript() {
 	outfile := path.Join(fcmd.Path, fcmd.CmdScript)
 
-	fd, err := os.OpenFile(outfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
+	fd, err := os.OpenFile(outfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
 	if err != nil {
 		log.Fatalf("Failed to create command file '%s': %s\n", outfile, err)
 	}

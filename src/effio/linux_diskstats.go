@@ -46,6 +46,10 @@ type Diskstats []Diskstat
 // close(finish)
 func CollectDiskstats(fname string, d Device) chan struct{} {
 	finish := make(chan struct{})
+	if d.Server != "" {
+		// if this is running on a remote device we can't collect stats
+		return finish
+	}
 	major, minor := d.devNums()
 
 	go func() {

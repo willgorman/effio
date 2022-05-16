@@ -89,7 +89,11 @@ func (suite *Suite) Populate(dl Devices, ftl FioConfTmpls) {
 			// but this makes things a little easier to modify down the road.
 			fcmdName := fmt.Sprintf("%s-%s", dev.Name, tp.Name)
 			fcmdPath := path.Join(suite.Path, fcmdName)
-			args := []string{"--output-format=json", "--output=output.json", "config.fio"}
+			args := []string{"--output-format=json", "--output=output.json"}
+			if dev.Server != "" {
+				args = append(args, fmt.Sprintf("--client=%s", dev.Server))
+			}
+			args = append(args, "config.fio")
 
 			// fio adds _$type.log to log file names so only provide the base name
 			fcmd := FioCommand{
@@ -140,7 +144,7 @@ func (suite *Suite) WriteSuiteJson() {
 	// MarshalIndent does not follow the final brace with a newline
 	js = append(js, byte('\n'))
 
-	err = ioutil.WriteFile(suite.SuiteJson, js, 0644)
+	err = ioutil.WriteFile(suite.SuiteJson, js, 0o644)
 	if err != nil {
 		log.Fatalf("Failed to write suite JSON data file '%s': %s\n", suite.SuiteJson, err)
 	}
@@ -152,7 +156,7 @@ func (suite *Suite) WriteSuiteJson() {
 // Populate().
 func (suite *Suite) mkdirAll() {
 	for _, fcmd := range suite.FioCommands {
-		err := os.MkdirAll(fcmd.Path, 0755)
+		err := os.MkdirAll(fcmd.Path, 0o755)
 		if err != nil {
 			log.Fatalf("Failed to create directory '%s': %s\n", fcmd.Path, err)
 		}
