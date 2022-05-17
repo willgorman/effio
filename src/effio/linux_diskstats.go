@@ -17,22 +17,31 @@ import (
 //   %4d     %7d %s   %lu     %lu  %lu      %u     %lu      %lu    %lu       %u      %u %u      %u\n
 // ^ from linux/block/genhd.c ~ line 1139
 type Diskstat struct {
-	Major         uint          //  0: major dev no
-	Minor         uint          //  1: minor dev no
-	Name          string        //  2: device name
-	ReadComplete  uint64        //  3: reads completed
-	ReadMerged    uint64        //  4: writes merged
-	ReadSectors   uint64        //  5: sectors read
-	ReadMs        uint          //  6: ms spent reading
-	WriteComplete uint64        //  7: reads completed
-	WriteMerged   uint64        //  8: writes merged
-	WriteSectors  uint64        //  9: sectors read
-	WriteMs       uint          // 10: ms spent writing
-	IOPending     uint          // 11: number of IOs currently in progress
-	IOMs          uint          // 12: jiffies_to_msecs(part_stat_read(hd, io_ticks))
-	IOQueueMs     uint          // 13: jiffies_to_msecs(part_stat_read(hd, time_in_queue))
-	Time          time.Time     // time that /proc/diskstats was read
-	Duration      time.Duration // only used in deltas
+	Major         uint   //  0: major dev no
+	Minor         uint   //  1: minor dev no
+	Name          string //  2: device name
+	ReadComplete  uint64 //  3: reads completed
+	ReadMerged    uint64 //  4: writes merged
+	ReadSectors   uint64 //  5: sectors read
+	ReadMs        uint   //  6: ms spent reading
+	WriteComplete uint64 //  7: reads completed
+	WriteMerged   uint64 //  8: writes merged
+	WriteSectors  uint64 //  9: sectors read
+	WriteMs       uint   // 10: ms spent writing
+	IOPending     uint   // 11: number of IOs currently in progress
+	IOMs          uint   // 12: jiffies_to_msecs(part_stat_read(hd, io_ticks))
+	IOQueueMs     uint   // 13: jiffies_to_msecs(part_stat_read(hd, time_in_queue))
+	// Kernel 4.18
+	DiscardComplete uint64
+	DiscardMerged   uint64
+	DiscardSectors  uint64
+	DiscardMs       uint
+	// Kernel 5.5
+	FlushComplete uint64
+	FlushMs       uint
+
+	Time     time.Time     // time that /proc/diskstats was read
+	Duration time.Duration // only used in deltas
 }
 
 type Diskstats []Diskstat
@@ -66,11 +75,13 @@ func CollectDiskstats(fname string, d Device) chan struct{} {
 				for _, st := range stats {
 					if st.Major == major && st.Minor == minor {
 						//                t  0  1  2  3  4  5  6  7  8  9 10 11 12 13
-						fmt.Fprintf(fd, "%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+						fmt.Fprintf(fd, "%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 							st.Time.UnixNano(), st.Major, st.Minor, st.Name, // t,0,1,2
 							st.ReadComplete, st.ReadMerged, st.ReadSectors, st.ReadMs, // 3,4,5,6
 							st.WriteComplete, st.WriteMerged, st.WriteSectors, st.WriteMs, // 7,8,9,10
-							st.IOPending, st.IOMs, st.IOQueueMs) // 11,12,13
+							st.IOPending, st.IOMs, st.IOQueueMs, st.DiscardComplete, // 11,12,13,14
+							st.DiscardMerged, st.DiscardSectors, st.DiscardMs, st.FlushComplete, // 15,16,17,18
+							st.FlushMs) // 19
 					}
 				}
 			case <-finish:
@@ -94,7 +105,10 @@ func ReadDiskstats() (out Diskstats) {
 	rows := bytes.Split(data[0:len(data)-1], []byte{byte('\n')})
 
 	// bytes.Split doesn't handle variable whitespace between fields
-	fields := make([]string, 15)
+	// different kernel versions support different numbers of fields.
+	// 5.5 has 20 so that's what we'll go with here but if we want to
+	//
+	fields := make([]string, 20)
 	field := make([]byte, 32)
 	var f, i int
 	for _, row := range rows {
@@ -126,6 +140,12 @@ func ReadDiskstats() (out Diskstats) {
 			fldtoint(fields, 11),
 			fldtoint(fields, 12),
 			fldtoint(fields, 13),
+			fldtoint64(fields, 14),
+			fldtoint64(fields, 15),
+			fldtoint64(fields, 16),
+			fldtoint(fields, 17),
+			fldtoint64(fields, 18),
+			fldtoint(fields, 19),
 			timestamp,
 			0,
 		}
@@ -138,7 +158,7 @@ func ReadDiskstats() (out Diskstats) {
 
 func (from *Diskstat) Delta(to Diskstat) Diskstat {
 	if from.Major != to.Major || from.Minor != to.Minor {
-		log.Fatal("Comparing different devices doesn't make sense. %s / %s\n", from.Name, to.Name)
+		log.Fatalf("Comparing different devices doesn't make sense. %s / %s\n", from.Name, to.Name)
 	}
 
 	return Diskstat{
@@ -156,6 +176,12 @@ func (from *Diskstat) Delta(to Diskstat) Diskstat {
 		to.IOPending - from.IOPending,
 		to.IOMs - from.IOMs,
 		to.IOQueueMs - from.IOQueueMs,
+		to.DiscardComplete - from.DiscardComplete,
+		to.DiscardMerged - from.DiscardMerged,
+		to.DiscardSectors - from.DiscardSectors,
+		to.DiscardMs - from.DiscardMs,
+		to.FlushComplete - from.FlushComplete,
+		to.FlushMs - from.FlushMs,
 		to.Time,
 		to.Time.Sub(from.Time),
 	}
