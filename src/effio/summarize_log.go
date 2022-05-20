@@ -33,6 +33,15 @@ func (p LogRecsByVal) Len() int           { return len(p) }
 func (p LogRecsByVal) Less(i, j int) bool { return p[i].Val < p[j].Val }
 func (p LogRecsByVal) Swap(i, j int)      { p[i].Val, p[j].Val = p[j].Val, p[i].Val }
 
+func Merge(recs []LogRecs) LogRecs {
+	combined := LogRecs{}
+	for _, r := range recs {
+		combined = append(combined, r...)
+	}
+	sort.Sort(combined)
+	return combined
+}
+
 // Log Bucket Summary: a handful of useful values for each bucket in
 // the LogBin.
 type LogSmry struct {
