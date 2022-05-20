@@ -16,8 +16,10 @@ import (
 )
 
 // Loads the CSV output by fio into an LogRecs array of LogRec structs.
-func LoadFioLog(filename string) LogRecs {
-	fmt.Printf("Parsing file: '%s' ... ", filename)
+func LoadFioLog(filename string, quiet bool) LogRecs {
+	if !quiet {
+		fmt.Printf("Parsing file: '%s' ... ", filename)
+	}
 
 	fd, err := os.Open(filename)
 	if err != nil {
@@ -41,7 +43,7 @@ func LoadFioLog(filename string) LogRecs {
 		}
 		lno++
 
-		if lno%10000 == 0 {
+		if !quiet && lno%10000 == 0 {
 			fmt.Printf(".")
 		}
 
@@ -82,8 +84,10 @@ func LoadFioLog(filename string) LogRecs {
 		records = append(records, &lr)
 	}
 
-	done := time.Now()
-	fmt.Printf(" Done.\nRows: %d Elapsed: %s\n", len(records), done.Sub(started).String())
+	if !quiet {
+		done := time.Now()
+		fmt.Printf(" Done.\nRows: %d Elapsed: %s\n", len(records), done.Sub(started).String())
+	}
 
 	return records
 }

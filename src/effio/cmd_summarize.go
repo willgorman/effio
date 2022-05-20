@@ -26,7 +26,7 @@ func (cmd *Cmd) SummarizeCSV() {
 	cmd.FlagSet.BoolVar(&jsonFlag, "json", false, "Print JSON instead of human-readable text.")
 	cmd.ParseArgs()
 
-	recs := LoadFioLog(inFlag)
+	recs := LoadFioLog(inFlag, jsonFlag)
 	smry := recs.Summarize(hbktFlag)
 	AppendMetadata(inFlag, &smry)
 
@@ -70,7 +70,7 @@ func (cmd *Cmd) SummarizeAll() {
 
 		started := time.Now()
 
-		recs := LoadFioLog(file)
+		recs := LoadFioLog(file, false)
 		smry := recs.Summarize(hbktFlag)
 		smry.Name = path.Base(file)
 		smry.Path = file
@@ -95,7 +95,7 @@ func (cmd *Cmd) SummarizeAll() {
 		sha1sum := sha1file(file)
 		outpath := path.Join(outFlag, fmt.Sprintf("%s-%s.json", sha1sum, smry.LogType))
 
-		out, err := os.OpenFile(outpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		out, err := os.OpenFile(outpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			log.Fatalf("Could not open file '%s' for write: %s\n", outpath, err)
 		}
@@ -109,7 +109,7 @@ func (cmd *Cmd) SummarizeAll() {
 func InventoryCSVFiles(dpath string) []string {
 	out := make([]string, 0)
 	re := "(bw_bw|lat_lat|iops_iops)\\.?\\d*\\.log$"
-	//re := "(bw_bw|lat_lat|lat_slat|lat_clat|iops_iops)\\.?\\d*\\.log$"
+	// re := "(bw_bw|lat_lat|lat_slat|lat_clat|iops_iops)\\.?\\d*\\.log$"
 
 	visitor := func(dpath string, f os.FileInfo, err error) error {
 		if err != nil {
