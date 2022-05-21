@@ -105,6 +105,6 @@ func (lrs LogRecs) DumpCSV(fpath string) {
 		if lr == nil {
 			break
 		}
-		fmt.Fprintf(fd, "%f,%f,%d,%d\n", lr.Time, lr.Val, lr.Ddir, lr.Bsz)
+		fmt.Fprintf(fd, "%d,%d,%d,%d\n", lr.Time, lr.Val, lr.Ddir, lr.Bsz)
 	}
 }

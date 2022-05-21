@@ -101,17 +101,17 @@ func (cmd *Cmd) SummarizeAll() {
 		}
 		out.Write(toJson(smry))
 
-		elapsed := time.Now().Sub(started)
+		elapsed := time.Since(started)
 		fmt.Printf("Generated %q from %q in %s\n", outpath, file, elapsed)
 	}
 }
 
 func InventoryCSVFiles(dpath string) []string {
 	out := make([]string, 0)
-	re := "(bw_bw|lat_lat|iops_iops)\\.?\\d*\\.log$"
+	re := "(bw_bw|lat_lat|iops_iops)\\.?\\d*\\.log(\\..+)?$"
 	// re := "(bw_bw|lat_lat|lat_slat|lat_clat|iops_iops)\\.?\\d*\\.log$"
 
-	visitor := func(dpath string, f os.FileInfo, err error) error {
+	visitor := func(dpath string, _ os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("Encountered an error while inventorying files in '%s': %s", dpath, err)
 		}
