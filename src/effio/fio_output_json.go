@@ -88,7 +88,19 @@ type FioJsonData struct {
 	HeaderGarbage string            `json:"header_garbage"`
 	FooterGarbage string            `json:"footer_garbage"`
 	Jobs          []FioJsonJob      `json:"jobs"`
+	ClientStats   []FioJsonJob      `json:"client_stats"`
 	DiskUtil      []FioJsonDiskUtil `json:"disk_util"`
+}
+
+func (f FioJsonData) GetJobs() []FioJsonJob {
+	// for some silly reason the json from a client/server benchmark
+	// uses "clients_stats" in the json to hold the exact same
+	// data as "jobs" does in a local benchmark ¯\_(ツ)_/¯
+	if len(f.Jobs) == 0 {
+		return f.ClientStats
+	}
+
+	return f.Jobs
 }
 
 func LoadFioJsonData(filename string) (fdata FioJsonData) {
